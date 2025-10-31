@@ -267,6 +267,7 @@
         <h1>EVE Data Framework</h1>
         <nav class="nav-actions">
             <a href="{{ url_for('dashboard.home') }}">Dashboard</a>
+            <a href="{{ url_for('industry.overview') }}">Industry Planner</a>
             {% if logged_in %}
                 <a href="{{ url_for('auth.add_toon') }}">Add Toon</a>
                 <a href="{{ url_for('auth.logout') }}">Logout</a>
@@ -344,6 +345,96 @@
                     </ul>
                 {% else %}
                     <p>No slot analytics yet. Run the industry or skills update to populate.</p>
+                {% endif %}
+            </article>
+
+            <article class="card">
+                <h2>Industry Snapshot</h2>
+                {% if industry_summary %}
+                    <div class="metrics">
+                        <div class="metric">
+                            <span class="label">Blueprints</span>
+                            <span class="value">{{ industry_summary.blueprint_total }}</span>
+                        </div>
+                        <div class="metric">
+                            <span class="label">Profitable</span>
+                            <span class="value">{{ industry_summary.profitable_total }}</span>
+                        </div>
+                        <div class="metric">
+                            <span class="label">Opportunities</span>
+                            <span class="value">{{ industry_summary.plan_total }}</span>
+                        </div>
+                        <div class="metric">
+                            <span class="label">Avg ISK / hr</span>
+                            <span class="value">{{ '%.2f'|format(industry_summary.average_isk_per_hour or 0) }}</span>
+                        </div>
+                    </div>
+                    <p style="margin-top:1rem;">Best blueprint: <strong>{{ industry_summary.best_blueprint.product_name if industry_summary.best_blueprint else 'N/A' }}</strong></p>
+                {% else %}
+                    <p>Blueprint analytics will appear after syncing assets and blueprints.</p>
+                {% endif %}
+                <a class="chip" href="{{ url_for('industry.overview') }}">Open Industry Planner</a>
+            </article>
+
+            <article class="card table-card">
+                <h2>Blueprint Highlights</h2>
+                {% if library_preview %}
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Blueprint</th>
+                                    <th>Product</th>
+                                    <th>Runs</th>
+                                    <th>Profit/run</th>
+                                    <th>ISK/hr</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for entry in library_preview %}
+                                <tr>
+                                    <td>{{ entry.blueprint_name }}</td>
+                                    <td>{{ entry.product_name }}</td>
+                                    <td>{{ entry.total_runs }}</td>
+                                    <td>{{ '%.2f'|format(entry.profit_per_run) }}</td>
+                                    <td>{{ '%.2f'|format(entry.isk_per_hour) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p>No blueprint profitability data yet.</p>
+                {% endif %}
+            </article>
+
+            <article class="card table-card">
+                <h2>Manufacturing Queue Preview</h2>
+                {% if plan_preview %}
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Runs</th>
+                                    <th>Total Profit</th>
+                                    <th>ISK/hr</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for job in plan_preview %}
+                                <tr>
+                                    <td>{{ job.product_name }}</td>
+                                    <td>{{ job.total_runs }}</td>
+                                    <td>{{ '%.2f'|format(job.total_profit) }}</td>
+                                    <td>{{ '%.2f'|format(job.isk_per_hour) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p>No manufacturing recommendations calculated.</p>
                 {% endif %}
             </article>
 

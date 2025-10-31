@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Industry Planner{% endblock %}</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+            --bg: #0f172a;
+            --bg-muted: rgba(15, 23, 42, 0.8);
+            --bg-elevated: rgba(30, 41, 59, 0.85);
+            --card: rgba(15, 23, 42, 0.65);
+            --text: #e2e8f0;
+            --text-muted: rgba(148, 163, 184, 0.85);
+            --accent: #38bdf8;
+            --accent-strong: #0ea5e9;
+            --danger: #f87171;
+            --success: #34d399;
+        }
+
+        body {
+            margin: 0;
+            background: radial-gradient(circle at top left, #1e3a8a 0%, #0f172a 45%, #020617 100%);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        a { color: inherit; }
+
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            backdrop-filter: blur(16px);
+            background: rgba(2, 6, 23, 0.82);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2.5rem;
+        }
+
+        .nav-brand {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .nav-brand h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            letter-spacing: 0.08em;
+        }
+
+        .nav-brand span {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            padding: 0.45rem 1rem;
+            border-radius: 999px;
+            background: rgba(56, 189, 248, 0.18);
+            color: var(--text);
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            background: var(--accent);
+            color: #020617;
+            transform: translateY(-1px);
+        }
+
+        main {
+            padding: 2.5rem 2.5rem 3.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 1.6rem;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            box-shadow: 0 20px 45px rgba(2, 6, 23, 0.55);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--accent);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+            text-align: left;
+            font-size: 0.85rem;
+        }
+
+        th {
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: rgba(148, 163, 184, 0.15);
+            padding: 0.2rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge.success { background: rgba(52, 211, 153, 0.2); color: var(--success); }
+        .badge.danger { background: rgba(248, 113, 113, 0.2); color: var(--danger); }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .metric {
+            padding: 1rem 1.2rem;
+            border-radius: 16px;
+            background: var(--bg-elevated);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+        }
+
+        .metric span {
+            display: block;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+        }
+
+        .metric strong {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .empty-state {
+            padding: 2rem;
+            border-radius: 18px;
+            background: var(--bg-elevated);
+            border: 1px dashed rgba(148, 163, 184, 0.25);
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.6rem 1.3rem;
+            border-radius: 999px;
+            text-decoration: none;
+            background: var(--accent);
+            color: #020617;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .flash {
+            margin: 0 0 1rem 0;
+            padding: 0.8rem 1.1rem;
+            border-radius: 12px;
+            background: rgba(56, 189, 248, 0.18);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+        }
+
+        form.settings-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.2rem;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .form-field label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .form-field input,
+        .form-field select,
+        .form-field textarea {
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            color: var(--text);
+            padding: 0.6rem 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .form-actions {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 999px;
+            padding: 0.6rem 1.4rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .btn.primary {
+            background: var(--accent);
+            color: #020617;
+        }
+
+        .btn.secondary {
+            background: rgba(148, 163, 184, 0.18);
+            color: var(--text);
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 720px) {
+            main {
+                padding: 1.5rem;
+            }
+            .nav {
+                padding: 0.9rem 1.5rem;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.8rem;
+            }
+            .nav-links {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-brand">
+            <h1>EVE Industry Planner</h1>
+            <span>Blueprint Library &amp; Manufacturing Control</span>
+        </div>
+        <div class="nav-links">
+            <a href="{{ url_for('dashboard.home') }}">Home</a>
+            <a href="{{ url_for('industry.overview') }}" class="{% if request.endpoint == 'industry.overview' %}active{% endif %}">Overview</a>
+            <a href="{{ url_for('industry.library') }}" class="{% if request.endpoint == 'industry.library' %}active{% endif %}">Blueprint Library</a>
+            <a href="{{ url_for('industry.manufacturing') }}" class="{% if request.endpoint == 'industry.manufacturing' %}active{% endif %}">Manufacturing List</a>
+            <a href="{{ url_for('industry.settings_view') }}" class="{% if request.endpoint == 'industry.settings_view' %}active{% endif %}">Settings</a>
+        </div>
+    </nav>
+    <main>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

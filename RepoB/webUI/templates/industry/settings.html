@@ -1,0 +1,79 @@
+{% extends 'industry/layout.html' %}
+{% block title %}Manufacturing Settings{% endblock %}
+{% block content %}
+    <section class="card">
+        <h2>Runtime Preferences</h2>
+        <form method="post" class="settings-form">
+            <div class="form-field">
+                <label for="price_source">Price Source</label>
+                <select id="price_source" name="price_source">
+                    <option value="sell" {% if settings.price_source == 'sell' %}selected{% endif %}>Lowest Sell Orders</option>
+                    <option value="buy" {% if settings.price_source == 'buy' %}selected{% endif %}>Highest Buy Orders</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label for="region_id">Market Region ID</label>
+                <input type="number" id="region_id" name="region_id" value="{{ settings.region_id or '' }}" placeholder="Any region">
+            </div>
+            <div class="form-field">
+                <label for="facility_tax">Facility Tax (%)</label>
+                <input type="number" step="0.01" id="facility_tax" name="facility_tax" value="{{ (settings.facility_tax * 100 if settings.facility_tax <= 1 else settings.facility_tax) | round(2) }}">
+            </div>
+            <div class="form-field">
+                <label for="facility_time_modifier">Facility Time Multiplier</label>
+                <input type="number" step="0.01" id="facility_time_modifier" name="facility_time_modifier" value="{{ settings.facility_time_modifier }}">
+            </div>
+            <div class="form-field">
+                <label for="job_cost_per_run">Job Cost per Run (ISK)</label>
+                <input type="number" step="0.01" id="job_cost_per_run" name="job_cost_per_run" value="{{ settings.job_cost_per_run }}">
+            </div>
+            <div class="form-field">
+                <label for="runs_per_blueprint">Runs per Blueprint</label>
+                <input type="number" id="runs_per_blueprint" name="runs_per_blueprint" min="1" value="{{ settings.runs_per_blueprint }}">
+            </div>
+            <div class="form-field">
+                <label for="parallel_jobs">Parallel Production Lines</label>
+                <input type="number" id="parallel_jobs" name="parallel_jobs" min="1" value="{{ settings.parallel_jobs }}">
+            </div>
+            <div class="form-field">
+                <label for="minimum_margin">Minimum Margin (%)</label>
+                <input type="number" step="0.01" id="minimum_margin" name="minimum_margin" value="{{ (settings.minimum_margin * 100 if settings.minimum_margin <= 1 else settings.minimum_margin) | round(2) }}">
+            </div>
+            <div class="form-field">
+                <label>Include Job Cost</label>
+                <input type="checkbox" name="include_job_cost" {% if settings.include_job_cost %}checked{% endif %}>
+            </div>
+            <div class="form-field" style="grid-column: 1 / -1;">
+                <label for="override_prices">Override Prices (typeID = price per unit)</label>
+                <textarea id="override_prices" name="override_prices" rows="6" placeholder="Example: 34 = 5.25">{{ settings.formatted_overrides() }}</textarea>
+            </div>
+            <div class="form-actions" style="grid-column: 1 / -1;">
+                <button type="submit" class="btn primary">Save Settings</button>
+                <a class="btn secondary" href="{{ url_for('industry.overview') }}">Cancel</a>
+            </div>
+        </form>
+    </section>
+
+    {% if report %}
+        <section class="card">
+            <h2>Impact Preview</h2>
+            <div class="metrics">
+                <div class="metric">
+                    <span>Profitable Blueprints</span>
+                    <strong>{{ report.summary.profitable_total }}</strong>
+                </div>
+                <div class="metric">
+                    <span>Total Profit (ISK)</span>
+                    <strong>{{ report.summary.total_profit | round(2) }}</strong>
+                </div>
+                <div class="metric">
+                    <span>Average ISK/hr</span>
+                    <strong>{{ report.summary.average_isk_per_hour | round(2) }}</strong>
+                </div>
+            </div>
+            {% if report.manufacturing_plan %}
+                <p>Top recommendation: <strong>{{ report.manufacturing_plan[0].product_name }}</strong> — {{ report.manufacturing_plan[0].isk_per_hour | round(2) }} ISK/hr.</p>
+            {% endif %}
+        </section>
+    {% endif %}
+{% endblock %}

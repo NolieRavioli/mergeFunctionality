@@ -14,8 +14,10 @@ from db.models import (
     WalletJournal,
     WalletTransaction,
 )
+from analysis.industry import generate_industry_report
 from analysis.job_slots import analyze_slots
 from util.sde import name_from_type_id
+from util.settings_store import load_manufacturing_settings
 from util.utils import get_portrait, get_runtime_settings
 
 logger = logging.getLogger(__name__)
@@ -40,6 +42,10 @@ def home():
     asset_meta = {"total_items": 0, "unique_types": 0}
     linked_toons = {}
     logged_in = False
+    industry_summary = {}
+    library_preview = []
+    plan_preview = []
+    manufacturing_settings = None
 
     if "character_id" in session and "owner_id" in session:
         char_id = session["character_id"]
@@ -156,6 +162,22 @@ def home():
 
             slot_status = analyze_slots(owner_id)
 
+            try:
+                manufacturing_settings = load_manufacturing_settings(owner_id)
+                industry_report = generate_industry_report(
+                    owner_id,
+                    manufacturing_settings,
+                    library_limit=5,
+                    plan_limit=3,
+                )
+                industry_summary = industry_report.summary
+                library_preview = industry_report.library
+                plan_preview = industry_report.manufacturing_plan
+            except Exception as exc:  # pragma: no cover - defensive guard
+                logger.warning("Failed to build industry report for owner %s: %s", owner_id, exc)
+                if debug_enabled:
+                    print(f"[Dashboard] Industry report generation failed: {exc}")
+
             if debug_enabled:
                 print(f"[Dashboard] Prepared {len(assets_summary)} asset summaries and {len(wallet_txns)} wallet txns")
 
@@ -178,4 +200,8 @@ def home():
         assets_summary=assets_summary,
         asset_meta=asset_meta,
         runtime=runtime,
+        industry_summary=industry_summary,
+        library_preview=library_preview,
+        plan_preview=plan_preview,
+        manufacturing_settings=manufacturing_settings,
     )

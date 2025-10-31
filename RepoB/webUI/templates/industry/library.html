@@ -1,0 +1,78 @@
+{% extends 'industry/layout.html' %}
+{% block title %}Blueprint Library{% endblock %}
+{% block content %}
+    {% if not report or not report.library %}
+        <div class="empty-state">
+            <h2>No Blueprint Data</h2>
+            <p>Refresh personal assets and blueprints from the main dashboard, then revisit this page.</p>
+            <a class="cta" href="{{ url_for('dashboard.home') }}">Go to Dashboard</a>
+        </div>
+    {% else %}
+        <section class="card">
+            <h2>Library Summary</h2>
+            <div class="metrics">
+                <div class="metric">
+                    <span>Total Blueprints</span>
+                    <strong>{{ report.summary.blueprint_total }}</strong>
+                </div>
+                <div class="metric">
+                    <span>Profitable</span>
+                    <strong>{{ report.summary.profitable_total }}</strong>
+                </div>
+                <div class="metric">
+                    <span>Plan Ready</span>
+                    <strong>{{ report.summary.plan_total }}</strong>
+                </div>
+            </div>
+        </section>
+        <section class="card">
+            <h2>Blueprint Inventory</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Blueprint</th>
+                            <th>Product</th>
+                            <th>Character</th>
+                            <th>Runs</th>
+                            <th>ME</th>
+                            <th>TE</th>
+                            <th>Material Cost/run</th>
+                            <th>Revenue/run</th>
+                            <th>Profit/run</th>
+                            <th>ISK/hr</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in report.library %}
+                            <tr>
+                                <td>{{ entry.blueprint_name }}</td>
+                                <td>{{ entry.product_name }}</td>
+                                <td>{{ entry.character_name }}</td>
+                                <td>{{ entry.total_runs }}</td>
+                                <td>{{ entry.me }}</td>
+                                <td>{{ entry.te }}</td>
+                                <td>{{ entry.material_cost_per_run | round(2) }}</td>
+                                <td>{{ entry.revenue_per_run | round(2) }}</td>
+                                <td>{{ entry.profit_per_run | round(2) }}</td>
+                                <td>{{ entry.isk_per_hour | round(2) }}</td>
+                            </tr>
+                            {% if entry.materials %}
+                                <tr>
+                                    <td colspan="10">
+                                        <strong>Materials per run</strong>
+                                        <ul>
+                                            {% for mat in entry.materials %}
+                                                <li>{{ mat.name }} — {{ mat.adjusted_quantity }} units @ {{ mat.price | round(2) }} ISK ({{ mat.total_cost | round(2) }} ISK)</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    {% endif %}
+{% endblock %}

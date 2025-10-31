@@ -1,0 +1,48 @@
+{% extends 'industry/layout.html' %}
+{% block title %}Manufacturing List{% endblock %}
+{% block content %}
+    {% if not report or not report.manufacturing_plan %}
+        <div class="empty-state">
+            <h2>No Manufacturing Recommendations</h2>
+            <p>Adjust your pricing, facility settings, or blueprint runs to surface profitable jobs.</p>
+            <a class="cta" href="{{ url_for('industry.settings_view') }}">Update Settings</a>
+        </div>
+    {% else %}
+        <section class="card">
+            <h2>Production Opportunities</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Blueprint</th>
+                            <th>Runs</th>
+                            <th>Total Time (hrs)</th>
+                            <th>Total Profit</th>
+                            <th>ISK/hr</th>
+                            <th>Margin</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in report.manufacturing_plan %}
+                            <tr>
+                                <td>{{ job.product_name }}</td>
+                                <td>{{ job.blueprint_name }}</td>
+                                <td>{{ job.total_runs }}</td>
+                                <td>{{ job.total_time_hours | round(2) }}</td>
+                                <td>{{ job.total_profit | round(2) }}</td>
+                                <td>{{ job.isk_per_hour | round(2) }}</td>
+                                <td>{{ (job.margin_percent * 100) | round(2) }}%</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section class="card">
+            <h2>Planning Notes</h2>
+            <p>Use the <strong>Settings</strong> tab to fine-tune facility tax, job cost assumptions, and override prices for key materials. The recommendations above respect your configured parallel production lines.</p>
+            <p>Blueprints failing the minimum margin threshold are filtered out automatically.</p>
+        </section>
+    {% endif %}
+{% endblock %}

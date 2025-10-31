@@ -55,6 +55,7 @@ class RuntimeSettings:
     session_secret: str = DEFAULT_SECRET
     log_level: str = "INFO"
     trace_esi: bool = False
+    testing_version: bool = False
 
 
 _runtime_settings: Optional[RuntimeSettings] = None
@@ -83,6 +84,9 @@ def initialize_runtime_environment(config_path: str = CONFIG_PATH) -> RuntimeSet
         debug_mode = _as_bool(runtime_cfg.get("debug") or os.getenv("EVE_DEBUG"))
         auto_install = _as_bool(runtime_cfg.get("auto_install") or os.getenv("EVE_AUTO_INSTALL"))
         trace_esi = _as_bool(runtime_cfg.get("trace_esi") or os.getenv("EVE_TRACE_ESI"))
+        testing_version = _as_bool(
+            runtime_cfg.get("testing_version") or os.getenv("EVE_TESTING_VERSION")
+        )
 
         web_host = runtime_cfg.get("host") or os.getenv("EVE_WEB_HOST", "127.0.0.1")
         web_port = int(runtime_cfg.get("port") or os.getenv("EVE_WEB_PORT", "5000"))
@@ -109,6 +113,7 @@ def initialize_runtime_environment(config_path: str = CONFIG_PATH) -> RuntimeSet
             session_secret=session_secret,
             log_level=log_level,
             trace_esi=trace_esi,
+            testing_version=testing_version,
         )
 
         return _runtime_settings

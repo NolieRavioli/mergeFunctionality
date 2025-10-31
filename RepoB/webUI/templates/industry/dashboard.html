@@ -1,0 +1,137 @@
+{% extends 'industry/layout.html' %}
+{% block title %}Industry Overview{% endblock %}
+{% block content %}
+    {% if not logged_in %}
+        <div class="empty-state">
+            <h2>Connect Your Character</h2>
+            <p>Link an ESI character from the dashboard to populate your blueprint library and generate manufacturing plans.</p>
+            <a class="cta" href="{{ url_for('dashboard.home') }}">Go to Dashboard</a>
+        </div>
+    {% else %}
+        {% set summary = report.summary if report else {} %}
+        <section class="card">
+            <h2>Production Snapshot</h2>
+            <div class="metrics">
+                <div class="metric">
+                    <span>Total Blueprints</span>
+                    <strong>{{ summary.blueprint_total or 0 }}</strong>
+                </div>
+                <div class="metric">
+                    <span>Profitable Profiles</span>
+                    <strong>{{ summary.profitable_total or 0 }}</strong>
+                </div>
+                <div class="metric">
+                    <span>Queued Opportunities</span>
+                    <strong>{{ summary.plan_total or 0 }}</strong>
+                </div>
+                <div class="metric">
+                    <span>Projected Profit (ISK)</span>
+                    <strong>{{ summary.total_profit | default(0.0) | round(2) }}</strong>
+                </div>
+                <div class="metric">
+                    <span>Average ISK / hour</span>
+                    <strong>{{ summary.average_isk_per_hour | default(0.0) | round(2) }}</strong>
+                </div>
+            </div>
+            {% if summary.missing_blueprints %}
+                <p class="badge danger">{{ summary.missing_blueprints | length }} blueprints missing SDE definitions</p>
+            {% endif %}
+        </section>
+
+        {% if summary.best_blueprint %}
+            {% set top = summary.best_blueprint %}
+            <section class="card">
+                <h2>Top Performer</h2>
+                <div class="metrics">
+                    <div class="metric">
+                        <span>Blueprint</span>
+                        <strong>{{ top.blueprint_name }}</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Product</span>
+                        <strong>{{ top.product_name }}</strong>
+                    </div>
+                    <div class="metric">
+                        <span>ISK / hour</span>
+                        <strong>{{ top.isk_per_hour | round(2) }}</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Profit / run</span>
+                        <strong>{{ top.profit_per_run | round(2) }}</strong>
+                    </div>
+                </div>
+            </section>
+        {% endif %}
+
+        <section class="grid">
+            <div class="card">
+                <h2>Blueprint Library Preview</h2>
+                {% if report and report.library %}
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Blueprint</th>
+                                    <th>Product</th>
+                                    <th>Runs</th>
+                                    <th>Profit/run</th>
+                                    <th>ISK/hr</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for entry in report.library %}
+                                    <tr>
+                                        <td>{{ entry.blueprint_name }}</td>
+                                        <td>{{ entry.product_name }}</td>
+                                        <td>{{ entry.total_runs }}</td>
+                                        <td>{{ entry.profit_per_run | round(2) }}</td>
+                                        <td>{{ entry.isk_per_hour | round(2) }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a class="cta" href="{{ url_for('industry.library') }}">View Full Library</a>
+                {% else %}
+                    <div class="empty-state">
+                        No blueprint data found. Sync assets and blueprints from the dashboard.
+                    </div>
+                {% endif %}
+            </div>
+            <div class="card">
+                <h2>Manufacturing Queue Preview</h2>
+                {% if report and report.manufacturing_plan %}
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Runs</th>
+                                    <th>Total Profit</th>
+                                    <th>ISK/hr</th>
+                                    <th>Margin</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for job in report.manufacturing_plan %}
+                                    <tr>
+                                        <td>{{ job.product_name }}</td>
+                                        <td>{{ job.total_runs }}</td>
+                                        <td>{{ job.total_profit | round(2) }}</td>
+                                        <td>{{ job.isk_per_hour | round(2) }}</td>
+                                        <td>{{ (job.margin_percent * 100) | round(2) }}%</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a class="cta" href="{{ url_for('industry.manufacturing') }}">Open Manufacturing List</a>
+                {% else %}
+                    <div class="empty-state">
+                        No profitable items identified yet. Adjust price overrides or manufacturing settings.
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+    {% endif %}
+{% endblock %}
