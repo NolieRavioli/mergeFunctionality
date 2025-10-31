@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{{ title }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            background-color: #0b0c10;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 0;
+        }
+        .wrapper {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 32px 24px 48px;
+        }
+        h1 {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .status {
+            margin-bottom: 24px;
+            font-size: 0.95rem;
+            opacity: 0.85;
+        }
+        pre {
+            background-color: #141820;
+            border-radius: 6px;
+            padding: 16px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+        }
+        a {
+            color: #76c7ff;
+        }
+        .actions {
+            margin-top: 16px;
+        }
+        .status.success {
+            color: #7dd97b;
+        }
+        .status.failure {
+            color: #ff8f8f;
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <h1>{{ title }}</h1>
+    <div class="status {{ 'success' if success else 'failure' }}">
+        {% if success %}
+            Operation finished successfully.
+        {% else %}
+            Operation encountered an error. Check the log output below.
+        {% endif %}
+    </div>
+    <pre>{{ log_output|e }}</pre>
+    <div class="actions">
+        <p>
+            You will be redirected in
+            <span id="countdown">{{ (redirect_delay // 1000) if redirect_delay else 0 }}</span>
+            seconds. If not, <a href="{{ redirect_url }}">click here to return</a>.
+        </p>
+    </div>
+</div>
+<script>
+    (function() {
+        var delay = {{ redirect_delay|int }};
+        if (delay > 0) {
+            var seconds = Math.ceil(delay / 1000);
+            var countdownEl = document.getElementById('countdown');
+            if (countdownEl) {
+                countdownEl.textContent = seconds;
+                var timer = setInterval(function() {
+                    seconds -= 1;
+                    if (seconds <= 0) {
+                        clearInterval(timer);
+                        seconds = 0;
+                    }
+                    countdownEl.textContent = seconds;
+                }, 1000);
+            }
+            setTimeout(function() {
+                window.location.href = {{ redirect_url|tojson }};
+            }, delay);
+        }
+    })();
+</script>
+</body>
+</html>

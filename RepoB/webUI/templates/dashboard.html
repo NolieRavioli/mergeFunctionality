@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EVE Data Dashboard</title>
+    <style>
+        :root {
+            color-scheme: dark light;
+            --bg: #0f172a;
+            --bg-card: rgba(15, 23, 42, 0.75);
+            --bg-card-light: rgba(255, 255, 255, 0.85);
+            --text: #e2e8f0;
+            --accent: #38bdf8;
+            --accent-dark: #0ea5e9;
+            --danger: #f87171;
+            font-family: "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: linear-gradient(135deg, #0f172a 0%, #111827 35%, #1e293b 100%);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.2rem 2.5rem;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 10px 30px rgba(8, 47, 73, 0.45);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            letter-spacing: 1px;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-actions a {
+            color: var(--text);
+            text-decoration: none;
+            padding: 0.55rem 1.1rem;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.25);
+            transition: all 0.2s ease;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .nav-actions a:hover {
+            background: var(--accent);
+            color: #0b1120;
+        }
+
+        main {
+            padding: 2.5rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .card {
+            padding: 1.5rem;
+            border-radius: 18px;
+            background: var(--bg-card);
+            box-shadow: 0 18px 45px rgba(8, 47, 73, 0.4);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+        }
+
+        .card.table-card {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 1024px) {
+            .card.table-card {
+                grid-column: span 1;
+            }
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+        }
+
+        .hero {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .hero-header {
+            display: flex;
+            gap: 1.2rem;
+            align-items: center;
+        }
+
+        .hero-header img {
+            width: 120px;
+            height: 120px;
+            border-radius: 18px;
+            box-shadow: 0 10px 25px rgba(14, 165, 233, 0.45);
+        }
+
+        .hero-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.9rem;
+        }
+
+        .metric {
+            background: rgba(148, 163, 184, 0.12);
+            border-radius: 14px;
+            padding: 0.9rem;
+            text-align: center;
+        }
+
+        .metric .label {
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-size: 0.7rem;
+            color: rgba(226, 232, 240, 0.75);
+        }
+
+        .metric .value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-top: 0.3rem;
+        }
+
+        .action-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+        }
+
+        .chip {
+            padding: 0.4rem 0.85rem;
+            border-radius: 999px;
+            background: rgba(56, 189, 248, 0.2);
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: background 0.2s ease;
+        }
+
+        .chip:hover {
+            background: var(--accent);
+            color: #0b1120;
+        }
+
+        .table-wrapper {
+            margin-top: 1rem;
+            max-height: 420px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 100%;
+        }
+
+        th, td {
+            padding: 0.65rem 0.75rem;
+            text-align: left;
+        }
+
+        th {
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.8px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+        }
+
+        tr:nth-child(even) {
+            background: rgba(148, 163, 184, 0.08);
+        }
+
+        .slot-list {
+            list-style: none;
+            padding: 0;
+            margin: 0.8rem 0 0;
+            display: grid;
+            gap: 0.5rem;
+        }
+
+        .slot-list li {
+            padding: 0.6rem 0.75rem;
+            border-radius: 12px;
+            background: rgba(56, 189, 248, 0.12);
+        }
+
+        .toon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+
+        .toon-card {
+            text-align: center;
+            padding: 1rem 0.6rem;
+            background: rgba(148, 163, 184, 0.12);
+            border-radius: 16px;
+        }
+
+        .toon-card img {
+            width: 96px;
+            height: 96px;
+            border-radius: 14px;
+            margin-bottom: 0.6rem;
+        }
+
+        .empty-state {
+            padding: 2.5rem;
+            text-align: center;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 18px;
+            border: 1px dashed rgba(148, 163, 184, 0.3);
+        }
+
+        .debug-banner {
+            margin-bottom: 1.5rem;
+            padding: 0.75rem 1rem;
+            border-radius: 14px;
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 0.8rem;
+                align-items: flex-start;
+            }
+
+            main {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <h1>EVE Data Framework</h1>
+        <nav class="nav-actions">
+            <a href="{{ url_for('dashboard.home') }}">Dashboard</a>
+            {% if logged_in %}
+                <a href="{{ url_for('auth.add_toon') }}">Add Toon</a>
+                <a href="{{ url_for('auth.logout') }}">Logout</a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}">Login</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main>
+        {% if runtime.debug_mode %}
+        <div class="debug-banner">
+            Debug mode is active. ESI payloads and state changes will print to the console for rapid diagnosis.
+        </div>
+        {% endif %}
+
+        {% if logged_in %}
+        <section class="grid">
+            <article class="card hero">
+                <div class="hero-header">
+                    {% if portrait %}
+                        <img src="{{ portrait.px256x256 or portrait.px128x128 }}" alt="Portrait">
+                    {% endif %}
+                    <div>
+                        <h2>{{ current_name or 'Active Character' }}</h2>
+                        <p>ID: {{ char_id }}</p>
+                        <p>Owner: {{ owner_id }}</p>
+                    </div>
+                </div>
+                <div class="hero-metrics">
+                    <div class="metric">
+                        <span class="label">Wallet Balance</span>
+                        <span class="value">{{ '%.2f'|format(wallet_balance or 0) }} ISK</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Tracked Items</span>
+                        <span class="value">{{ asset_meta.total_items }}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Unique Types</span>
+                        <span class="value">{{ asset_meta.unique_types }}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Linked Toons</span>
+                        <span class="value">{{ toon_cards|length }}</span>
+                    </div>
+                </div>
+                <div>
+                    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+                        <h2 style="margin:0;">Quick Updates</h2>
+                        <small>Use after ESI data pulls or SDE refresh.</small>
+                    </div>
+                    <div class="action-chips">
+                        <a class="chip" href="{{ url_for('update_personal.update_assets') }}">Assets</a>
+                        <a class="chip" href="{{ url_for('update_personal.update_industry') }}">Industry Jobs</a>
+                        <a class="chip" href="{{ url_for('update_personal.update_wallet') }}">Wallet</a>
+                        <a class="chip" href="{{ url_for('update_personal.update_skills') }}">Skills</a>
+                        <a class="chip" href="{{ url_for('update_personal.update_bookmarks') }}">Bookmarks</a>
+                        <a class="chip" href="{{ url_for('update_public.update_public_sde') }}">Refresh SDE</a>
+                        <a class="chip" href="{{ url_for('update_public.update_public_structures') }}">Structures</a>
+                        <a class="chip" href="{{ url_for('update_public.update_public_structure_markets') }}">Structure Markets</a>
+                        <a class="chip" href="{{ url_for('update_public.update_public_market') }}">Public Market</a>
+                        <a class="chip" href="{{ url_for('update_public.update_public_contracts') }}">Contracts</a>
+                    </div>
+                </div>
+            </article>
+
+            <article class="card">
+                <h2>Industry Slot Status</h2>
+                {% if slot_status %}
+                    <ul class="slot-list">
+                        {% for msg in slot_status %}
+                            <li>{{ msg }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No slot analytics yet. Run the industry or skills update to populate.</p>
+                {% endif %}
+            </article>
+
+            <article class="card table-card">
+                <h2>Top Assets</h2>
+                {% if assets_summary %}
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Quantity</th>
+                                <th>Stacks</th>
+                                <th>Locations</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in assets_summary %}
+                            <tr>
+                                <td>{{ row.name }}</td>
+                                <td>{{ row.quantity }}</td>
+                                <td>{{ row.stacks }}</td>
+                                <td>{{ row.locations|join(', ') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <p>No assets recorded for this character yet.</p>
+                {% endif %}
+            </article>
+
+            <article class="card table-card">
+                <h2>Recent Wallet Transactions</h2>
+                {% if wallet_txns %}
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Qty</th>
+                                <th>ISK</th>
+                                <th>Unit Price</th>
+                                <th>Direction</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for txn in wallet_txns %}
+                            <tr>
+                                <td>{{ txn.date }}</td>
+                                <td>{{ txn.type_name }}</td>
+                                <td>{{ txn.quantity }}</td>
+                                <td>{{ '%.2f'|format(txn.amount) }}</td>
+                                <td>{{ '%.2f'|format(txn.unit_price or 0) }}</td>
+                                <td>{{ 'Buy' if txn.is_buy else 'Sell' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <p>Run the wallet update to see transaction history.</p>
+                {% endif %}
+            </article>
+
+            <article class="card table-card">
+                <h2>Wallet Journal</h2>
+                {% if wallet_journal %}
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Balance</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in wallet_journal %}
+                            <tr>
+                                <td>{{ entry.date }}</td>
+                                <td>{{ entry.ref_type }}</td>
+                                <td>{{ '%.2f'|format(entry.amount or 0) }}</td>
+                                <td>{{ '%.2f'|format(entry.balance or 0) }}</td>
+                                <td>{{ entry.description }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <p>No journal entries stored yet.</p>
+                {% endif %}
+            </article>
+
+            <article class="card">
+                <h2>Linked Characters</h2>
+                {% if toon_cards %}
+                <div class="toon-grid">
+                    {% for toon in toon_cards %}
+                    <div class="toon-card">
+                        <img src="{{ toon.portrait_url }}" alt="{{ toon.name }} portrait">
+                        <strong>{{ toon.name }}</strong>
+                        <div style="font-size:0.75rem; opacity:0.8;">{{ toon.id }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                    <p>Link additional toons to get a richer dataset.</p>
+                {% endif %}
+            </article>
+        </section>
+        {% else %}
+        <div class="empty-state">
+            <h2>Welcome to the EVE Data Framework</h2>
+            <p>Authenticate with EVE SSO to begin tracking assets, wallet flows, jobs, and more for your corporation or small group.</p>
+            <p>
+                <a class="chip" href="{{ url_for('auth.login') }}">Log in with EVE Online</a>
+            </p>
+        </div>
+        {% endif %}
+    </main>
+</body>
+</html>

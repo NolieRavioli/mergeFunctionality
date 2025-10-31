@@ -1,0 +1,7 @@
+.git
+_privateData
+_publicData
+_sde
+**/__pycache__
+**/.env
+**/oldCode

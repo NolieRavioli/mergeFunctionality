@@ -1,0 +1,8 @@
+sqlalchemy
+requests
+flask
+cryptography
+requests-oauthlib
+pyjwt
+pyyaml
+ruamel.yaml

@@ -1,0 +1,201 @@
+﻿<!-- templates/market_browser.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Market Browser</title>
+    <style>
+        body {
+            display: flex;
+            font-family: sans-serif;
+            margin: 0;
+        }
+
+        .sidebar {
+            width: 25vw;
+            padding: 20px;
+            background-color: #f2f2f2;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow-y: auto;
+            border-right: 1px solid #ccc;
+        }
+
+        .main {
+            flex-grow: 1;
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+
+        .category-tree ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+
+        .category-tree li {
+            cursor: pointer;
+            margin: 5px 0;
+        }
+
+        .category-tree .collapsed > ul {
+            display: none;
+        }
+
+        .arrow {
+            display: inline-block;
+            width: 1em;
+        }
+    </style>
+    <script>
+        function toggleCategory(event) {
+            event.stopPropagation();
+            const li = event.target.closest("li");
+            const arrow = li.querySelector(".arrow");
+            li.classList.toggle("collapsed");
+            arrow.textContent = li.classList.contains("collapsed") ? "⯈" : "⯆";
+        }
+    </script>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Market Filters</h2>
+        <form method="get">
+            <label for="itemInput">Item Name(s):</label><br>
+            <input id="itemInput" name="type_id"
+                   value="{{ query or '' }}"
+                   placeholder="e.g. Tritanium,Pyerite">
+            <br><br>
+
+            <label for="groupInput">Group ID:</label><br>
+            <input id="groupInput" name="group_id"
+                   value="{{ request.args.get('group_id','') }}"
+                   placeholder="e.g. 1361">
+            <br><br>
+
+            <label>Region ID:</label><br>
+            <input name="region_id" value="{{ request.args.get('region_id','') }}">
+            <br><br>
+
+            <label>Location ID:</label><br>
+            <input name="location_id" value="{{ request.args.get('location_id','') }}">
+            <br><br>
+
+            <label>Order Type:</label><br>
+            <select name="is_buy">
+                <option value="">Both</option>
+                <option value="1" {% if request.args.get('is_buy')=='1' %}selected{% endif %}>Buy</option>
+                <option value="0" {% if request.args.get('is_buy')=='0' %}selected{% endif %}>Sell</option>
+            </select>
+            <br><br>
+
+            <label>Sort By:</label><br>
+            <select name="sort_by">
+                <option value="price" {% if sort_by=='price' %}selected{% endif %}>Price</option>
+                <option value="volume" {% if sort_by=='volume' %}selected{% endif %}>Volume</option>
+            </select>
+            <br><br>
+
+            <button type="submit">Apply</button>
+        </form>
+
+        <h3>Market Category Tree</h3>
+        <div class="category-tree">
+            {% macro render_group(group) %}
+            <li class="collapsed">
+                <span class="arrow" onclick="toggleCategory(event)">⯈</span>
+                <a href="{{ url_for('market_browser.browser',
+                              type_id=request.args.get('type_id',''),
+                              group_id=group.id,
+                              region_id=request.args.get('region_id',''),
+                              location_id=request.args.get('location_id',''),
+                              is_buy=request.args.get('is_buy',''),
+                              sort_by=sort_by,
+                              page=1) }}"
+                   onclick="event.stopPropagation();">
+                    {{ group.name }}
+                </a>
+                <ul>
+                    {% for child in group.children %}
+                    {{ render_group(child) }}
+                    {% endfor %}
+                    {% for tid in group.types %}
+                    <li onclick="event.stopPropagation();">
+                        <a href="{{ url_for('market_browser.browser',
+                                    type_id=tid,
+                                    group_id='',
+                                    region_id=request.args.get('region_id',''),
+                                    location_id=request.args.get('location_id',''),
+                                    is_buy=request.args.get('is_buy',''),
+                                    sort_by=sort_by,
+                                    page=1) }}">
+                            {{ name_from_type_id(tid) }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </li>
+            {% endmacro %}
+
+            <ul>
+                {% for group in market_tree %}
+                {{ render_group(group) }}
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="main">
+        <h1>Market Orders</h1> <a href="../">(back to dashboard)</a>
+        <p>Showing {{ results|length }} of {{ total }} results</p>
+
+        <table>
+            <tr>
+                <th>Order ID</th>
+                <th>Item Name</th>
+                <th>Region</th>
+                <th>Location</th>
+                <th>Buy/Sell</th>
+                <th>Price</th>
+                <th>Volume</th>
+            </tr>
+            {% for row in results %}
+            <tr>
+                <td>{{ row.order_id }}</td>
+                <td>{{ name_from_type_id(row.type_id) }}</td>
+                <td>{{ row.region_id }}</td>
+                <td>{{ row.location_id }}</td>
+                <td>{{ "Buy" if row.is_buy_order else "Sell" }}</td>
+                <td>{{ "%.2f"|format(row.price) }}</td>
+                <td>{{ row.volume_remain }} / {{ row.volume_total }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <div>
+            {% set qs = request.args.to_dict() %}
+            {% if page > 1 %}
+            {% set prev = qs.copy() %}
+            {% set _ = prev.update({'page': page-1}) %}
+            <a href="{{ url_for('market_browser.browser',
+                             **prev) }}">Previous</a>
+            {% endif %}
+            {% if page*page_size < total %}
+            {% set nxt = qs.copy() %}
+            {% set _ = nxt.update({'page': page+1}) %}
+            <a href="{{ url_for('market_browser.browser',
+                             **nxt) }}">Next</a>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

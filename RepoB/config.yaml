@@ -1,0 +1,8 @@
+Environment Variables:
+  LANGUAGE: "en"
+  SUPPORTED_LANGUAGES: "en"
+  PUBLIC_DATA_FOLDER: "_publicData"
+  EVE_PUBLIC_DATABASE_FILE: "public.db"
+  EVE_PRIVATE_DATABASE_FOLDER: "_privateData/"
+  AUTH_DATA_FOLDER: "auth/.gitignore/"
+  SDE_PATH: "_sde/"
