@@ -7,6 +7,7 @@ from flask import Flask
 
 from util.utils import RuntimeSettings, get_runtime_settings
 from webUI.dashboard import dashboard_bp
+from webUI.industry import industry_bp
 from webUI.market_browser import market_bp
 from webUI.personal_routes import update_personal_bp
 from webUI.public_routes import update_public_bp
@@ -30,5 +31,6 @@ def create_app(settings: Optional[RuntimeSettings] = None):
     app.register_blueprint(update_personal_bp)
     app.register_blueprint(update_public_bp)
     app.register_blueprint(market_bp)
+    app.register_blueprint(industry_bp)
 
     return app
